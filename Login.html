@@ -1,0 +1,863 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>تسجيل الدخول - منصة التربية النوعية</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Firebase SDKs -->
+    <script type="module">
+        // Import the functions you need from the SDKs you need
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+        import { 
+            getAuth, 
+            signInWithEmailAndPassword,
+            sendPasswordResetEmail,
+            setPersistence,
+            browserSessionPersistence,
+            browserLocalPersistence,
+            onAuthStateChanged
+        } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+        import { 
+            getFirestore,
+            doc,
+            getDoc
+        } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+        // Your web app's Firebase configuration
+        const firebaseConfig = {
+            apiKey: "AIzaSyBZt7nY8RwFXly2Gur2h27ES8eckaD5l7A",
+            authDomain: "sit-el-kol-871dd.firebaseapp.com",
+            projectId: "sit-el-kol-871dd",
+            storageBucket: "sit-el-kol-871dd.firebasestorage.app",
+            messagingSenderId: "778044370996",
+            appId: "1:778044370996:web:3c5e565ec4dd23ea989a61",
+            measurementId: "G-5FL2DK6JG8"
+        };
+
+        // Initialize Firebase
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+
+        // جعل المتغيرات متاحة بشكل عام
+        window.firebaseAuth = auth;
+        window.firebaseDB = db;
+        window.firebaseSignIn = signInWithEmailAndPassword;
+        window.firebaseSendPasswordReset = sendPasswordResetEmail;
+        window.firebaseSetPersistence = setPersistence;
+        window.firebasePersistence = {
+            session: browserSessionPersistence,
+            local: browserLocalPersistence
+        };
+        window.firebaseOnAuthStateChanged = onAuthStateChanged;
+        window.firebaseGetDoc = getDoc;
+        window.firebaseDoc = doc;
+    </script>
+
+    <style>
+        /* ===== إعدادات عامة ===== */
+        :root {
+            --primary-color: #2c3e50;
+            --secondary-color: #3498db;
+            --accent-color: #e74c3c;
+            --success-color: #27ae60;
+            --light-color: #ecf0f1;
+            --dark-color: #2c3e50;
+            --shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+            --shadow-lg: 0 10px 30px rgba(0, 0, 0, 0.15);
+            --transition: all 0.3s ease;
+            --border-radius: 10px;
+            --border-radius-lg: 20px;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: var(--dark-color);
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            direction: rtl;
+        }
+
+        /* ===== حاوية الدخول ===== */
+        .login-container {
+            display: flex;
+            max-width: 1200px;
+            width: 100%;
+            background: white;
+            border-radius: var(--border-radius-lg);
+            overflow: hidden;
+            box-shadow: var(--shadow-lg);
+            animation: slideIn 0.8s ease;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* ===== الجزء الأيسر (المعلومات) ===== */
+        .login-info {
+            flex: 1;
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            color: white;
+            padding: 60px 40px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .login-info::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            right: 0;
+            width: 100%;
+            height: 100%;
+            background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 800"><path fill="%23ffffff10" d="M400,0C400,0,400,400,400,400C178.6,400,0,221.4,0,0C0,0,400,0,400,0z"/></svg>');
+            background-size: cover;
+            opacity: 0.1;
+        }
+
+        .logo-section {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 40px;
+        }
+
+        .logo-section i {
+            font-size: 40px;
+            color: #ffd700;
+        }
+
+        .logo-section h1 {
+            font-size: 28px;
+            font-weight: 700;
+        }
+
+        .welcome-text {
+            margin-bottom: 50px;
+        }
+
+        .welcome-text h2 {
+            font-size: 2.2rem;
+            margin-bottom: 15px;
+            color: #ffd700;
+        }
+
+        .welcome-text p {
+            font-size: 1.1rem;
+            opacity: 0.9;
+            line-height: 1.8;
+        }
+
+        .features-list {
+            list-style: none;
+            margin-top: 40px;
+        }
+
+        .features-list li {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 20px;
+            font-size: 1.1rem;
+        }
+
+        .features-list i {
+            width: 40px;
+            height: 40px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #ffd700;
+        }
+
+        /* ===== الجزء الأيمن (نموذج الدخول) ===== */
+        .login-form-section {
+            flex: 1;
+            padding: 60px 50px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+
+        .form-header {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+
+        .form-header h2 {
+            font-size: 2.2rem;
+            color: var(--primary-color);
+            margin-bottom: 10px;
+        }
+
+        .form-header p {
+            color: #666;
+            font-size: 1.1rem;
+        }
+
+        #loginForm {
+            width: 100%;
+        }
+
+        .form-group {
+            margin-bottom: 25px;
+            position: relative;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: var(--primary-color);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .form-group label i {
+            color: var(--secondary-color);
+        }
+
+        .input-with-icon {
+            position: relative;
+        }
+
+        .input-with-icon i {
+            position: absolute;
+            right: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #666;
+            font-size: 18px;
+        }
+
+        .form-control {
+            width: 100%;
+            padding: 16px 50px 16px 16px;
+            border: 2px solid #ddd;
+            border-radius: var(--border-radius);
+            font-size: 16px;
+            font-family: inherit;
+            transition: var(--transition);
+            background: #f8f9fa;
+        }
+
+        .form-control:focus {
+            outline: none;
+            border-color: var(--secondary-color);
+            background: white;
+            box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.1);
+        }
+
+        .password-toggle {
+            position: absolute;
+            left: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: none;
+            border: none;
+            color: #666;
+            cursor: pointer;
+            font-size: 18px;
+            padding: 5px;
+        }
+
+        .password-toggle:hover {
+            color: var(--secondary-color);
+        }
+
+        .form-options {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+        }
+
+        .remember-me {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .remember-me input[type="checkbox"] {
+            width: 18px;
+            height: 18px;
+            accent-color: var(--secondary-color);
+        }
+
+        .forgot-password {
+            color: var(--secondary-color);
+            text-decoration: none;
+            font-weight: 600;
+            transition: var(--transition);
+        }
+
+        .forgot-password:hover {
+            color: #2980b9;
+            text-decoration: underline;
+        }
+
+        .btn-login {
+            width: 100%;
+            padding: 16px;
+            background: linear-gradient(135deg, var(--secondary-color), #2980b9);
+            color: white;
+            border: none;
+            border-radius: var(--border-radius);
+            font-size: 18px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: var(--transition);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            margin-bottom: 25px;
+        }
+
+        .btn-login:hover {
+            transform: translateY(-3px);
+            box-shadow: var(--shadow);
+            background: linear-gradient(135deg, #2980b9, var(--secondary-color));
+        }
+
+        .btn-login:disabled {
+            opacity: 0.7;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .spinner {
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top-color: white;
+            animation: spin 1s linear infinite;
+            display: none;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .divider {
+            text-align: center;
+            margin: 30px 0;
+            position: relative;
+        }
+
+        .divider::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            right: 0;
+            width: 45%;
+            height: 1px;
+            background: #ddd;
+        }
+
+        .divider::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 0;
+            width: 45%;
+            height: 1px;
+            background: #ddd;
+        }
+
+        .divider span {
+            background: white;
+            padding: 0 15px;
+            color: #666;
+            font-size: 14px;
+        }
+
+        .register-link {
+            text-align: center;
+            margin-top: 20px;
+            font-size: 16px;
+        }
+
+        .register-link a {
+            color: var(--secondary-color);
+            text-decoration: none;
+            font-weight: 600;
+            transition: var(--transition);
+        }
+
+        .register-link a:hover {
+            color: #2980b9;
+            text-decoration: underline;
+        }
+
+        /* ===== رسائل التنبيه ===== */
+        .alert {
+            padding: 15px;
+            border-radius: var(--border-radius);
+            margin-bottom: 20px;
+            display: none;
+            animation: fadeIn 0.3s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        .alert-success {
+            background-color: rgba(39, 174, 96, 0.1);
+            border: 1px solid var(--success-color);
+            color: var(--success-color);
+        }
+
+        .alert-error {
+            background-color: rgba(231, 76, 60, 0.1);
+            border: 1px solid var(--accent-color);
+            color: var(--accent-color);
+        }
+
+        /* ===== التجاوب ===== */
+        @media (max-width: 992px) {
+            .login-container {
+                flex-direction: column;
+                max-width: 500px;
+            }
+            
+            .login-info {
+                padding: 40px 30px;
+            }
+            
+            .login-form-section {
+                padding: 40px 30px;
+            }
+        }
+
+        @media (max-width: 576px) {
+            body {
+                padding: 10px;
+            }
+            
+            .login-container {
+                border-radius: 15px;
+            }
+            
+            .login-info, .login-form-section {
+                padding: 30px 20px;
+            }
+            
+            .welcome-text h2 {
+                font-size: 1.8rem;
+            }
+            
+            .form-header h2 {
+                font-size: 1.8rem;
+            }
+            
+            .form-options {
+                flex-direction: column;
+                gap: 15px;
+                align-items: flex-start;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="login-container">
+        <!-- الجزء الأيسر: معلومات المنصة -->
+        <div class="login-info">
+            <div class="logo-section">
+                <i class="fas fa-graduation-cap"></i>
+                <h1>منصة التربية النوعية</h1>
+            </div>
+            
+            <div class="welcome-text">
+                <h2>مرحباً بعودتك!</h2>
+                <p>سجل دخولك للوصول إلى المنصة التعليمية المتكاملة لكلية التربية النوعية - جامعة عين شمس</p>
+            </div>
+            
+            <ul class="features-list">
+                <li>
+                    <i class="fas fa-video"></i>
+                    <span>المحاضرات المسجلة بجودة عالية</span>
+                </li>
+                <li>
+                    <i class="fas fa-tasks"></i>
+                    <span>نظام المهام والتسليم الإلكتروني</span>
+                </li>
+                <li>
+                    <i class="fas fa-chalkboard-teacher"></i>
+                    <span>سكاشن تفاعلية مباشرة</span>
+                </li>
+                <li>
+                    <i class="fas fa-file-alt"></i>
+                    <span>امتحانات إلكترونية متكاملة</span>
+                </li>
+            </ul>
+        </div>
+        
+        <!-- الجزء الأيمن: نموذج الدخول -->
+        <div class="login-form-section">
+            <div class="form-header">
+                <h2>تسجيل الدخول</h2>
+                <p>أدخل بيانات حسابك للوصول إلى المنصة</p>
+            </div>
+            
+            <!-- رسائل التنبيه -->
+            <div class="alert alert-success" id="successAlert" style="display: none;">
+                <i class="fas fa-check-circle"></i> تم تسجيل الدخول بنجاح!
+            </div>
+            
+            <div class="alert alert-error" id="errorAlert" style="display: none;">
+                <i class="fas fa-exclamation-circle"></i> <span id="errorMessage"></span>
+            </div>
+            
+            <form id="loginForm">
+                <div class="form-group">
+                    <label for="email">
+                        <i class="fas fa-envelope"></i>
+                        البريد الإلكتروني الجامعي
+                    </label>
+                    <div class="input-with-icon">
+                        <i class="fas fa-at"></i>
+                        <input 
+                            type="email" 
+                            id="email" 
+                            class="form-control"
+                            placeholder="name@sedu.asu.edu.eg"
+                            required
+                            autocomplete="email"
+                        >
+                    </div>
+                    <small class="form-text" style="color:#666;font-size:14px;margin-top:5px;">
+                        استخدم البريد الجامعي الرسمي (ينتهي بـ @sedu.asu.edu.eg)
+                    </small>
+                </div>
+                
+                <div class="form-group">
+                    <label for="password">
+                        <i class="fas fa-lock"></i>
+                        كلمة المرور
+                    </label>
+                    <div class="input-with-icon">
+                        <i class="fas fa-key"></i>
+                        <input 
+                            type="password" 
+                            id="password" 
+                            class="form-control"
+                            placeholder="أدخل كلمة المرور"
+                            required
+                            autocomplete="current-password"
+                        >
+                        <button type="button" class="password-toggle" id="togglePassword">
+                            <i class="fas fa-eye"></i>
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="form-options">
+                    <label class="remember-me">
+                        <input type="checkbox" id="rememberMe">
+                        تذكرني على هذا الجهاز
+                    </label>
+                    <a href="#" class="forgot-password" id="forgotPassword">
+                        نسيت كلمة المرور؟
+                    </a>
+                </div>
+                
+                <button type="submit" class="btn-login" id="loginBtn">
+                    <i class="fas fa-sign-in-alt"></i>
+                    <span id="btnText">تسجيل الدخول</span>
+                    <div class="spinner" id="spinner"></div>
+                </button>
+                
+                <div class="divider">
+                    <span>أو</span>
+                </div>
+                
+                <div class="register-link">
+                    <p>ليس لديك حساب؟ <a href="Register.html">أنشئ حساب جديد</a></p>
+                    <p style="margin-top:10px;font-size:14px;color:#666;">
+                        <i class="fas fa-info-circle"></i>
+                        الدور (طالب/أستاذ/أدمن) يتم تحديده تلقائياً حسب البريد الإلكتروني
+                    </p>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // عناصر DOM
+            const loginForm = document.getElementById('loginForm');
+            const emailInput = document.getElementById('email');
+            const passwordInput = document.getElementById('password');
+            const togglePassword = document.getElementById('togglePassword');
+            const rememberMe = document.getElementById('rememberMe');
+            const loginBtn = document.getElementById('loginBtn');
+            const btnText = document.getElementById('btnText');
+            const spinner = document.getElementById('spinner');
+            const successAlert = document.getElementById('successAlert');
+            const errorAlert = document.getElementById('errorAlert');
+            const errorMessage = document.getElementById('errorMessage');
+            const forgotPassword = document.getElementById('forgotPassword');
+
+            // 1. عرض/إخفاء كلمة المرور
+            togglePassword.addEventListener('click', function() {
+                const type = passwordInput.getAttribute('type') === 'password' ? 'text' : 'password';
+                passwordInput.setAttribute('type', type);
+                this.innerHTML = type === 'password' 
+                    ? '<i class="fas fa-eye"></i>' 
+                    : '<i class="fas fa-eye-slash"></i>';
+            });
+
+            // 2. تحميل البريد المحفوظ إن وجد
+            const savedEmail = localStorage.getItem('savedEmail');
+            if (savedEmail) {
+                emailInput.value = savedEmail;
+                rememberMe.checked = true;
+            }
+
+            // 3. إرسال نموذج الدخول مع Firebase
+            loginForm.addEventListener('submit', async function(e) {
+                e.preventDefault();
+                
+                // إخفاء رسائل التنبيه القديمة
+                successAlert.style.display = 'none';
+                errorAlert.style.display = 'none';
+                
+                // التحقق من صحة البيانات
+                const email = emailInput.value.trim();
+                const password = passwordInput.value;
+                
+                if (!email || !password) {
+                    showError('يرجى ملء جميع الحقول المطلوبة');
+                    return;
+                }
+                
+                if (!isValidEmail(email)) {
+                    showError('البريد الإلكتروني غير صالح');
+                    return;
+                }
+
+                // التحقق من البريد الجامعي
+                if (!email.endsWith('@sedu.asu.edu.eg')) {
+                    showError('يجب استخدام البريد الجامعي الرسمي (ينتهي بـ @sedu.asu.edu.eg)');
+                    return;
+                }
+                
+                // عرض حالة التحميل
+                btnText.textContent = 'جاري تسجيل الدخول...';
+                loginBtn.disabled = true;
+                spinner.style.display = 'block';
+                
+                try {
+                    // تحديد نوع التذكر
+                    const persistenceType = rememberMe.checked 
+                        ? window.firebasePersistence.local 
+                        : window.firebasePersistence.session;
+                    
+                    // تعيين إستمرارية الجلسة
+                    await window.firebaseSetPersistence(window.firebaseAuth, persistenceType);
+                    
+                    // تسجيل الدخول مع Firebase
+                    const userCredential = await window.firebaseSignIn(
+                        window.firebaseAuth, 
+                        email, 
+                        password
+                    );
+                    
+                    const user = userCredential.user;
+                    
+                    // جلب بيانات المستخدم من Firestore
+                    const userDocRef = window.firebaseDoc(window.firebaseDB, "users", user.uid);
+                    const userDoc = await window.firebaseGetDoc(userDocRef);
+                    
+                    if (userDoc.exists()) {
+                        const userData = userDoc.data();
+                        
+                        // حفظ البريد إذا طلب التذكر
+                        if (rememberMe.checked) {
+                            localStorage.setItem('savedEmail', email);
+                        } else {
+                            localStorage.removeItem('savedEmail');
+                        }
+                        
+                        // حفظ بيانات المستخدم في localStorage
+                        localStorage.setItem('user', JSON.stringify({
+                            uid: user.uid,
+                            email: user.email,
+                            role: userData.role || 'student',
+                            name: userData.name || '',
+                            department: userData.department || ''
+                        }));
+                        
+                        // عرض رسالة النجاح
+                        showSuccess();
+                        
+                        // توجيه حسب نوع المستخدم
+                        setTimeout(() => {
+                            redirectUser(userData.role || 'student');
+                        }, 1500);
+                        
+                    } else {
+                        throw new Error('بيانات المستخدم غير موجودة في النظام');
+                    }
+                    
+                } catch (error) {
+                    handleFirebaseError(error);
+                    resetLoginButton();
+                }
+            });
+
+            // 4. نسيت كلمة المرور مع Firebase
+            forgotPassword.addEventListener('click', function(e) {
+                e.preventDefault();
+                const email = emailInput.value.trim();
+                
+                if (!email) {
+                    showError('يرجى إدخال البريد الإلكتروني أولاً');
+                    emailInput.focus();
+                    return;
+                }
+                
+                if (!isValidEmail(email)) {
+                    showError('البريد الإلكتروني غير صالح');
+                    return;
+                }
+
+                if (!email.endsWith('@sedu.asu.edu.eg')) {
+                    showError('يجب استخدام البريد الجامعي الرسمي (ينتهي بـ @sedu.asu.edu.eg)');
+                    return;
+                }
+                
+                // عرض حالة التحميل
+                const originalText = btnText.textContent;
+                btnText.textContent = 'جاري الإرسال...';
+                loginBtn.disabled = true;
+                spinner.style.display = 'block';
+                
+                // إرسال رابط إعادة تعيين كلمة المرور
+                window.firebaseSendPasswordReset(window.firebaseAuth, email)
+                    .then(() => {
+                        showSuccess('تم إرسال رابط إعادة تعيين كلمة المرور إلى بريدك الإلكتروني');
+                        resetLoginButton();
+                    })
+                    .catch(error => {
+                        handleFirebaseError(error);
+                        resetLoginButton();
+                    });
+            });
+
+            // 5. دوال المساعدة
+            function isValidEmail(email) {
+                const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+                return re.test(email);
+            }
+
+            function handleFirebaseError(error) {
+                let message = 'حدث خطأ أثناء تسجيل الدخول';
+                
+                switch (error.code) {
+                    case 'auth/invalid-email':
+                        message = 'البريد الإلكتروني غير صالح';
+                        break;
+                    case 'auth/user-disabled':
+                        message = 'هذا الحساب معطل';
+                        break;
+                    case 'auth/user-not-found':
+                        message = 'لا يوجد حساب مرتبط بهذا البريد الإلكتروني';
+                        break;
+                    case 'auth/wrong-password':
+                        message = 'كلمة المرور غير صحيحة';
+                        break;
+                    case 'auth/too-many-requests':
+                        message = 'تم محاولة تسجيل الدخول مرات عديدة، حاول لاحقاً';
+                        break;
+                    case 'auth/network-request-failed':
+                        message = 'خطأ في الاتصال بالشبكة';
+                        break;
+                    default:
+                        message = error.message || 'حدث خطأ غير متوقع';
+                }
+                
+                showError(message);
+            }
+
+            function redirectUser(role) {
+                let redirectUrl = 'Home.html';
+                
+                // يمكنك تغيير هذا حسب احتياجاتك
+                switch (role) {
+                    case 'admin':
+                        redirectUrl = 'AdminDashboard.html';
+                        break;
+                    case 'professor':
+                        redirectUrl = 'ProfessorDashboard.html';
+                        break;
+                    case 'student':
+                        redirectUrl = 'StudentDashboard.html';
+                        break;
+                    default:
+                        redirectUrl = 'Home.html';
+                }
+                
+                window.location.href = redirectUrl;
+            }
+
+            function showSuccess(message = 'تم تسجيل الدخول بنجاح!') {
+                successAlert.innerHTML = `<i class="fas fa-check-circle"></i> ${message}`;
+                successAlert.style.display = 'block';
+                successAlert.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }
+
+            function showError(message) {
+                errorMessage.textContent = message;
+                errorAlert.style.display = 'block';
+                errorAlert.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }
+
+            function resetLoginButton() {
+                btnText.textContent = 'تسجيل الدخول';
+                loginBtn.disabled = false;
+                spinner.style.display = 'none';
+            }
+
+            // 6. مراقبة حالة المصادقة
+            window.firebaseOnAuthStateChanged(window.firebaseAuth, (user) => {
+                if (user) {
+                    // المستخدم مسجل دخول بالفعل، يمكنك توجيهه مباشرة
+                    console.log('User is already logged in:', user.email);
+                }
+            });
+        });
+    </script>
+</body>
+</html>
